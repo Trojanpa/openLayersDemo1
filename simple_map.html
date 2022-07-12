@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Simple Map</title>
+  <link rel="stylesheet" href="./openLayers/css/ol.css" />
+  <script src="./openLayers/build/ol.js"></script>
+  <style>
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    // 创建地图容器
+    let map = new ol.Map({
+      target: 'map', // 关联到对应的div容器
+      layers: [
+        // 创建瓦片图层
+        new ol.layer.Tile({
+          source: new ol.source.OSM() // 设置OpenStreetMap（一个开放数据源的免费地图）的地图数据
+        }),
+      ],
+      // 设置地图视图
+      view: new ol.View({
+        projection: 'EPSG:3857', // 空间参考系统
+        center: [0, 0], // 地图视图中心点
+        zoom: 0, // 地图视图缩放级别
+      }),
+    });
+  </script>
+</body>
+
+</html>
