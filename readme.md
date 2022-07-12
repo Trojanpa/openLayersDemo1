@@ -2,14 +2,14 @@
 OpenLayers框架
 
 ## 学习地址
-学习目录：https://www.zhihu.com/column/c_1098918318844612608
-当前学习位置：https://zhuanlan.zhihu.com/p/67993736
-OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
+  + 学习目录：https://www.zhihu.com/column/c_1098918318844612608
+  + 当前学习位置：https://zhuanlan.zhihu.com/p/67993736
+  + OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
 
 ## OpenLayers简介
-OpenLayers是一个用于开发WebGIS客户端的JavaScript包，最初基于BSD许可发行。
-OpenLayers是一个开源的项目，其设计之意是为互联网客户端提供强大的地图展示功能，包括地图数据显示与相关操作，并具有灵活的扩展机制。
-目前OpenLayers已经成为一个拥有众多开发者和帮助社区的成熟、流行的框架。
+  + OpenLayers是一个用于开发WebGIS客户端的JavaScript包，最初基于BSD许可发行。
+  + OpenLayers是一个开源的项目，其设计之意是为互联网客户端提供强大的地图展示功能，包括地图数据显示与相关操作，并具有灵活的扩展机制。
+  + 目前OpenLayers已经成为一个拥有众多开发者和帮助社区的成熟、流行的框架。
 
 
 ## OpenLayers的DOM元素组织结构
