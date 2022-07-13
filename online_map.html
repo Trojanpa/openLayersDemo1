@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Simple Map</title>
+  <title>加载在线瓦片地图</title>
   <link rel="stylesheet" href="./openLayers/css/ol.css" />
   <script src="./openLayers/build/ol.js"></script>
   <style>
@@ -175,7 +175,7 @@
       view: new ol.View({
         projection: 'EPSG:3857', // 空间参考系统
         center: [0, 0], // 地图视图中心点
-        zoom: 3, // 地图视图缩放级别
+        zoom: 0, // 地图视图缩放级别
       }),
       // 使用extend()方法往地图添加控件（地图默认添加了缩放按钮控件、归属控件、地图旋转控件(同时按住键盘的Shift键+Alt键，然后用鼠标拖拽地图，可以使地图旋转)、复位控件）
       controls: ol.control.defaults().extend([
