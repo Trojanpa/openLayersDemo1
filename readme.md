@@ -3,7 +3,7 @@ OpenLayers框架
 
 ## 学习地址
   + 学习目录：https://www.zhihu.com/column/c_1098918318844612608
-  + 当前学习位置：https://zhuanlan.zhihu.com/p/72554548
+  + 当前学习位置：https://zhuanlan.zhihu.com/p/72966746
   + OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
 
 ## OpenLayers简介
@@ -175,11 +175,40 @@ https://pic3.zhimg.com/80/v2-eb2226f935c5675c8e8aa67217de0b16_720w.jpg
 
 因为不同的在线瓦片地图可能采用不一样的分辨率，比如百度在线瓦片地图。所以在使用在线瓦片地图或者自己制作的瓦片地图时，都需要知道使用的分辨率是多少。如若不然，可能会出现位置偏移。
 
+## 使用XYZ方式加载高德地图
+目前高德的瓦片地址有如下两种：
 
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7和
+  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}
+前者是高德的新版地址，后者是老版地址。
 
+高德新版的参数：
 
+  + lang可以通过zh_cn设置中文，en设置英文；
+  + size基本无作用；
+  + scl设置标注还是底图，scl=1代表注记，scl=2代表底图（矢量或者影像）；
+  + style设置影像和路网，style=6为影像图，style=7为矢量路网，style=8为影像路网。
 
+总结之：
 
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7 为矢量图（含路网、含注记）
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=7 为矢量图（含路网，不含注记）
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=6 为影像底图（不含路网，不含注记）
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6 为影像底图（不含路网、不含注记）
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8 为影像路图（含路网，含注记）
+  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=8 为影像路网（含路网，不含注记）
+高德旧版可以通过style参数设置影像、矢量、路网。
+
+总结之：
+
+  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z} 为影像底图（不含路网，不含注记）
+  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z} 为矢量地图（含路网，含注记）
+  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z} 为影像路网（含路网，含注记）
+
+## 使用XYZ方式加载雅虎地图（Yahoo）
+Yahoo地图的代码有点不一样：多了tileSize参数的设置。
+
+默认情况下，tileSize为256，这也是现在绝大多数瓦片采用的大小。但Yahoo地图使用的是512，所以我们需要指定。
 
 
 

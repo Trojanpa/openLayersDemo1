@@ -39,6 +39,9 @@
     <input type="radio" name="mapRadio" id="osm" checked />OpenStreetMap
     <input type="radio" name="mapRadio" id="bingmap" />Bing Map
     <input type="radio" name="mapRadio" id="stamen" />Stamen Map
+    <input type="radio" name="mapRadio" id="xyz-osm" />XYZ OpenStreetMap
+    <input type="radio" name="mapRadio" id="xyz-gaode" />XYZ GaoDe
+    <input type="radio" name="mapRadio" id="xyz-yahoo" />XYZ Yahoo
   </div>
   <div><span>当前层级：</span><span id="zoom"></span><span>分辨率：</span><span id="resolution"></span></div>
   <div id="map"></div>
@@ -69,6 +72,30 @@
           }),
           visible: false, // 先隐藏该图层
         }),
+        // 使用XYZ的方式加载OpenStreetMap
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            url: 'http://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+        // 使用XYZ方式加载高德地图
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            url: 'http://webst0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+        // 使用XYZ方式加载雅虎地图
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            url: 'https://{0-3}.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/512/png8' +
+              '?lg=ENG&ppi=250&token=TrLJuXVK62IQk0vuXFzaig%3D%3D&requestid=yahoo.prod&app_id=eAdkWGYRoc4RfxVo0Z4B',
+            tileSize: 512, // 设置对应的瓦片大小
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+
         // 添加一个显示OSM地图的瓦片网格的图层（从上图可以看到地图上多了网格，每一个网格对应的就是一个瓦片。网格中有三个参数：层级z、经度方向上的x（列号）、纬度方向上的y（行号））
         new ol.layer.Tile({
           source: new ol.source.TileDebug({
@@ -120,6 +147,9 @@
           'osm': 0,
           'bingmap': 1,
           'stamen': 2,
+          'xyz-osm': 3,
+          'xyz-gaode': 4,
+          'xyz-yahoo': 5,
         };
         const targetId = event.target.id;
         if (idObj.hasOwnProperty(targetId)) {
