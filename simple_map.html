@@ -15,7 +15,7 @@
     }
 
     #map {
-      height: 100vh;
+      height: calc(100vh - 21px);
     }
 
     /* 修改地图控件样式 */
@@ -35,16 +35,37 @@
 </head>
 
 <body>
+  <div id="controls">
+    <input type="radio" name="mapRadio" id="osm" checked />OpenStreetMap
+    <input type="radio" name="mapRadio" id="bingmap" />Bing Map
+    <input type="radio" name="mapRadio" id="stamen" />Stamen Map
+  </div>
   <div id="map"></div>
   <script>
     // 创建地图容器
-    let map = new ol.Map({
+    const map = new ol.Map({
       target: 'map', // 关联到对应的div容器
       layers: [
-        // 创建瓦片图层
+        // 实例化瓦片图层
         new ol.layer.Tile({
-          source: new ol.source.OSM() // 设置OpenStreetMap（一个开放数据源的免费地图）的地图数据
+          source: new ol.source.OSM(), // 设置OpenStreetMap（一个开放数据源的免费地图）的地图数据
+          visible: true,
         }),
+        new ol.layer.Tile({
+          // 设置Bing Map（必应地图）数据源
+          source: new ol.source.BingMaps({
+            key: 'AjR3JR5e2mRS1B6pDiIZvgt54HtLWRDmsWqFNZbF6HnlUqv5ocXIwpzNoRz1VyrF', // 可以自行到Bing Map官网申请自己应用程序的key
+            imagerySet: 'Aerial'
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+        new ol.layer.Tile({
+          // 设置Stamen提供的地图切片数据
+          source: new ol.source.Stamen({
+            layer: 'watercolor'
+          }),
+          visible: false, // 先隐藏该图层
+        })
       ],
       // 设置地图视图
       view: new ol.View({
@@ -76,6 +97,28 @@
           units: 'metric', // 设置比例尺单位，接受"degrees"、"imperial"、"us"、"nautical"或"metric"（默认为”metric")。
         }), // 实例化比例尺控件
       ]),
+    });
+
+    const controls = document.getElementById('controls');
+    // 事件委托
+    controls.addEventListener('click', (event) => {
+      // 如果选中某一单选按钮
+      if (event.target.checked) {
+        // 通过DOM元素的id值来判断应该对哪个图层进行显示
+        const idObj = {
+          'osm': 0,
+          'bingmap': 1,
+          'stamen': 2,
+        };
+        const targetId = event.target.id;
+        if (idObj.hasOwnProperty(targetId)) {
+          map.getLayers().item(idObj[targetId]).setVisible(true);
+          delete idObj[targetId];
+          for (const key in idObj) {
+            map.getLayers().item(idObj[key]).setVisible(false);
+          }
+        }
+      }
     });
   </script>
 </body>
