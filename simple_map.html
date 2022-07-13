@@ -15,7 +15,7 @@
     }
 
     #map {
-      height: calc(100vh - 21px);
+      height: calc(100vh - 42px);
     }
 
     /* 修改地图控件样式 */
@@ -40,11 +40,14 @@
     <input type="radio" name="mapRadio" id="bingmap" />Bing Map
     <input type="radio" name="mapRadio" id="stamen" />Stamen Map
   </div>
+  <div><span>当前层级：</span><span id="zoom"></span><span>分辨率：</span><span id="resolution"></span></div>
   <div id="map"></div>
+
   <script>
     // 创建地图容器
     const map = new ol.Map({
       target: 'map', // 关联到对应的div容器
+      // 图层数组
       layers: [
         // 实例化瓦片图层
         new ol.layer.Tile({
@@ -55,16 +58,23 @@
           // 设置Bing Map（必应地图）数据源
           source: new ol.source.BingMaps({
             key: 'AjR3JR5e2mRS1B6pDiIZvgt54HtLWRDmsWqFNZbF6HnlUqv5ocXIwpzNoRz1VyrF', // 可以自行到Bing Map官网申请自己应用程序的key
-            imagerySet: 'Aerial'
+            imagerySet: 'Aerial', // 指定加载的图层名，可以为'Aerial'或'Road'
           }),
           visible: false, // 先隐藏该图层
         }),
         new ol.layer.Tile({
           // 设置Stamen提供的地图切片数据
           source: new ol.source.Stamen({
-            layer: 'watercolor'
+            layer: 'watercolor', // 指定加载的图层名，可以为'watercolor'、'toner'或'terrain'
           }),
           visible: false, // 先隐藏该图层
+        }),
+        // 添加一个显示OSM地图的瓦片网格的图层（从上图可以看到地图上多了网格，每一个网格对应的就是一个瓦片。网格中有三个参数：层级z、经度方向上的x（列号）、纬度方向上的y（行号））
+        new ol.layer.Tile({
+          source: new ol.source.TileDebug({
+            projection: 'EPSG:3857', // Web墨卡托投影坐标系
+            tileGrid: new ol.source.OSM().getTileGrid(), // 获取OSM地图的瓦片坐标系
+          })
         })
       ],
       // 设置地图视图
@@ -99,6 +109,7 @@
       ]),
     });
 
+    // 切换图层
     const controls = document.getElementById('controls');
     // 事件委托
     controls.addEventListener('click', (event) => {
@@ -120,6 +131,14 @@
         }
       }
     });
+
+    // 监听层级变化，输出当前层级和分辨率
+    map.getView().on('change:resolution', function () {
+      document.getElementById('zoom').innerHTML = this.getZoom() + '，';
+      document.getElementById('resolution').innerHTML = this.getResolution();
+    });
+    document.getElementById('zoom').innerHTML = map.getView().getZoom() + '，';
+    document.getElementById('resolution').innerHTML = + map.getView().getResolution();
   </script>
 </body>
 
