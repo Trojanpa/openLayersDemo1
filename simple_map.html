@@ -52,7 +52,7 @@
         center: [0, 0], // 地图视图中心点
         zoom: 0, // 地图视图缩放级别
       }),
-      // 使用extend()方法往地图添加控件
+      // 使用extend()方法往地图添加控件（地图默认添加了缩放按钮控件、归属控件、地图旋转控件(同时按住键盘的Shift键+Alt键，然后用鼠标拖拽地图，可以使地图旋转)、复位控件）
       controls: ol.control.defaults().extend([
         new ol.control.ZoomSlider(), // 实例化滑块缩放控件
         new ol.control.ZoomToExtent({ // 实例化缩放至特定位置控件
@@ -62,6 +62,19 @@
             12718359, 2597725, // 后两个表示位置矩形的右上角坐标
           ]
         }),
+        new ol.control.FullScreen(), // 实例化全屏控件
+        new ol.control.MousePosition(), // 实例化坐标拾取控件
+        new ol.control.OverviewMap({ // 实例化鹰眼控件（即整个地图的概览图，也称鹰眼图、缩略图）
+          collapsed: false, // 是否默认展开
+          layers: [ // 需要设置鹰眼图的目标图层，否则鹰眼图一片空白
+            new ol.layer.Tile({
+              source: new ol.source.OSM()
+            }),
+          ],
+        }),
+        new ol.control.ScaleLine({
+          units: 'metric', // 设置比例尺单位，接受"degrees"、"imperial"、"us"、"nautical"或"metric"（默认为”metric")。
+        }), // 实例化比例尺控件
       ]),
     });
   </script>
