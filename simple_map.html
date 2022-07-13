@@ -15,7 +15,7 @@
     }
 
     #map {
-      height: calc(100vh - 42px);
+      height: calc(100vh - 63px);
     }
 
     /* 修改地图控件样式 */
@@ -42,6 +42,9 @@
     <input type="radio" name="mapRadio" id="xyz-osm" />XYZ OpenStreetMap
     <input type="radio" name="mapRadio" id="xyz-gaode" />XYZ GaoDe
     <input type="radio" name="mapRadio" id="xyz-yahoo" />XYZ Yahoo
+    <input type="radio" name="mapRadio" id="xyz-baidu" />XYZ BaiDu
+    <input type="radio" name="mapRadio" id="xyz-zh-bingmap" />XYZ 中文 Bing Map
+    <input type="radio" name="mapRadio" id="xyz-zh-google" />XYZ 中文 Google Map
   </div>
   <div><span>当前层级：</span><span id="zoom"></span><span>分辨率：</span><span id="resolution"></span></div>
   <div id="map"></div>
@@ -52,6 +55,7 @@
       target: 'map', // 关联到对应的div容器
       // 图层数组
       layers: [
+        // OpenLayer的默认瓦片坐标系的原点在左上角，从左到右为x轴正方向，从下到上为y轴正方向。
         // 实例化瓦片图层
         new ol.layer.Tile({
           source: new ol.source.OSM(), // 设置OpenStreetMap（一个开放数据源的免费地图）的地图数据
@@ -96,19 +100,82 @@
           visible: false, // 先隐藏该图层
         }),
 
+        // 使用XYZ方式加载百度地图（需要转换坐标系）
+        // 使用XYZ方式加载百度地图和前面几个XYZ方式加载在线瓦片地图的例子不一样的地方在于，没有设置url，
+        // 而是设置了tileUrlFunction，此百度地图示例并不完美，由于OpenLayers和百度在线瓦片地图分辨率
+        // 不一致的原因导致了位置出现偏差，所以可以通过重新定义分辨率的方法进行修正，修正版请看baidu_map.html
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            tilePixelRatio: 2, // 瓦片服务使用的像素比
+            // 通过tileUrlFunction（获取瓦片url的函数）对瓦片坐标进行转换，函数参数是一个瓦片坐标
+            tileUrlFunction: function (tileCoord) {
+              // console.log(tileCoord); // [0: z的值, 1: x的值, 2: y的值]
+              let z = tileCoord[0];
+              let x = tileCoord[1];
+              let y = -tileCoord[2] - 1;
+
+              // 计算当前层级下X或Y方向上瓦片总数的一半，用于定位整个地图的中心点
+              let halfTileNum = Math.pow(2, z) / 2;
+
+              // 原点从左上角移到中心点后，计算xy方向上新的坐标位置
+              let baiduX = x - halfTileNum;
+              let baiduY = y + halfTileNum;
+
+              // 百度瓦片服务url将负数使用M前缀来标识
+              if (baiduX < 0) {
+                baiduX = 'M' + (-baiduX);
+              }
+              if (baiduY < 0) {
+                baiduY = 'M' + (-baiduY);
+              }
+
+              // 返回经过转换后，对应于百度在线瓦片的url
+              return 'http://online2.map.bdimg.com/onlinelabel/?qt=tile&x=' + baiduX + '&y=' + baiduY + '&z=' + z + '&styles=pl&udt=20160321&scaler=2&p=0';
+            }
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+
+        // 使用XYZ方式加载Bing中文地图
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            tileUrlFunction: function (tileCoord) {
+              let z = tileCoord[0];
+              let x = tileCoord[1];
+              let y = tileCoord[2];
+              let result = '', zIndex = 0;
+
+              for (zIndex = 0; zIndex < z; zIndex++) {
+                result = ((x & 1) + 2 * (y & 1)).toString() + result;
+                x >>= 1;
+                y >>= 1;
+              }
+              return 'http://dynamic.t0.tiles.ditu.live.com/comp/ch/' + result + '?it=G,VE,BX,L,LA&mkt=zh-cn,syr&n=z&og=111&ur=CN';
+            }
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+        // 使用XYZ方式加载Google中文地图
+        new ol.layer.Tile({
+          source: new ol.source.XYZ({
+            url: 'http://www.google.cn/maps/vt/pb=!1m4!1m3!1i{z}!2i{x}!3i{y}!2m3!1e0!2sm!3i345013117!3m8!2szh-CN!3scn!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0'
+          }),
+          visible: false, // 先隐藏该图层
+        }),
+
         // 添加一个显示OSM地图的瓦片网格的图层（从上图可以看到地图上多了网格，每一个网格对应的就是一个瓦片。网格中有三个参数：层级z、经度方向上的x（列号）、纬度方向上的y（行号））
         new ol.layer.Tile({
           source: new ol.source.TileDebug({
             projection: 'EPSG:3857', // Web墨卡托投影坐标系
             tileGrid: new ol.source.OSM().getTileGrid(), // 获取OSM地图的瓦片坐标系
           })
-        })
+        }),
       ],
       // 设置地图视图
       view: new ol.View({
         projection: 'EPSG:3857', // 空间参考系统
         center: [0, 0], // 地图视图中心点
-        zoom: 0, // 地图视图缩放级别
+        zoom: 3, // 地图视图缩放级别
       }),
       // 使用extend()方法往地图添加控件（地图默认添加了缩放按钮控件、归属控件、地图旋转控件(同时按住键盘的Shift键+Alt键，然后用鼠标拖拽地图，可以使地图旋转)、复位控件）
       controls: ol.control.defaults().extend([
@@ -150,6 +217,9 @@
           'xyz-osm': 3,
           'xyz-gaode': 4,
           'xyz-yahoo': 5,
+          'xyz-baidu': 6,
+          'xyz-zh-bingmap': 7,
+          'xyz-zh-google': 8,
         };
         const targetId = event.target.id;
         if (idObj.hasOwnProperty(targetId)) {
