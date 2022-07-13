@@ -9,8 +9,27 @@
   <link rel="stylesheet" href="./openLayers/css/ol.css" />
   <script src="./openLayers/build/ol.js"></script>
   <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
     #map {
       height: 100vh;
+    }
+
+    /* 修改地图控件样式 */
+    #map .ol-zoom .ol-zoom-out {
+      margin-top: 204px;
+    }
+
+    #map .ol-zoomslider {
+      background-color: transparent;
+      top: 2.3em;
+    }
+
+    #map .ol-zoom-extent {
+      top: 280px;
     }
   </style>
 </head>
@@ -33,6 +52,17 @@
         center: [0, 0], // 地图视图中心点
         zoom: 0, // 地图视图缩放级别
       }),
+      // 使用extend()方法往地图添加控件
+      controls: ol.control.defaults().extend([
+        new ol.control.ZoomSlider(), // 实例化滑块缩放控件
+        new ol.control.ZoomToExtent({ // 实例化缩放至特定位置控件
+          // 指定缩放的目标位置，它是一个数组
+          extent: [
+            12667718, 2562800, // 前两个表示位置矩形的左下角坐标
+            12718359, 2597725, // 后两个表示位置矩形的右上角坐标
+          ]
+        }),
+      ]),
     });
   </script>
 </body>
