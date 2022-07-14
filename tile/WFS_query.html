@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>基于WFS查询要素</title>
+  <link rel="stylesheet" href="../openLayers/css/ol.css" />
+  <script src="../openLayers/build/ol.js"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map {
+      height: calc(100vh - 42px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+    let vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({
+        format: new ol.format.GeoJSON(),            // 解析从服务器端发过来的GeoJSON数据
+        // 设置KVP格式的请求URL
+        url: 'http://localhost:8080/geoserver/wfs?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature' +
+          '&TYPENAME=test:province&OUTPUTFORMAT=application/json'
+      })
+    });
+
+    let map = new ol.Map({
+      target: 'map',                          // 关联到对应的div容器
+      layers: [
+        new ol.layer.Tile({                 // Stamen底图
+          source: new ol.source.Stamen({
+            layer: 'watercolor'
+          })
+        }),
+        vectorLayer
+      ],
+      view: new ol.View({                     // 地图视图
+        projection: 'EPSG:3857',
+        center: [0, 0],
+        zoom: 3
+      })
+    });
+  </script>
+</body>
+
+</html>

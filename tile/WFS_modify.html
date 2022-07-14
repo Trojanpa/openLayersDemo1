@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>基于WFS更新要素</title>
+  <link rel="stylesheet" href="../openLayers/css/ol.css" />
+  <script src="../openLayers/build/ol.js"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map {
+      height: calc(100vh - 42px);
+    }
+  </style>
+</head>
+
+<body>
+  <button id="save">保存修改</button>
+  <div id="map"></div>
+
+  <script>
+    let modifiedFeatures = null;    // 用于保存被修改的要素
+    let save = document.getElementById('save');
+
+    let vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector({
+        format: new ol.format.GeoJSON({    // 用于解析从服务器端发过来的GeoJSON数据
+          geometryName: 'geom'           // 注意：这里图形信息字段一定要和后端服务器一致
+        }),
+        // 设置KVP格式的请求URL
+        url: 'http://localhost:8080/geoserver/wfs?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature' +
+          '&TYPENAME=test:province&OUTPUTFORMAT=application/json'
+      })
+    });
+
+    let map = new ol.Map({
+      target: 'map',                          // 关联到对应的div容器
+      layers: [
+        new ol.layer.Tile({                 // Stamen底图
+          source: new ol.source.Stamen({
+            layer: 'watercolor'
+          })
+        }),
+        vectorLayer
+      ],
+      view: new ol.View({                     // 地图视图
+        projection: 'EPSG:3857',
+        center: [0, 0],
+        zoom: 3
+      })
+    });
+
+    // 选择要素控件
+    let select = new ol.interaction.Select({
+      layers: [
+        vectorLayer
+      ]
+    });
+    map.addInteraction(select);
+
+    // 修改要素控件
+    let modify = new ol.interaction.Modify({
+      features: select.getFeatures()
+    });
+    // 保存修改完成的要素
+    modify.on('modifyend', (event) => {
+      modifiedFeatures = event.features;
+    });
+    map.addInteraction(modify);
+
+    save.addEventListener('click', (event) => {
+      let features = [];
+      modifiedFeatures.forEach(function (item, index, array) {
+        features.push(item);
+      });
+      updateWFS(features);
+    });
+
+    function updateWFS(features) {
+      let WFS = new ol.format.WFS();
+      // 生成XML格式的WFS请求信息
+      let transact_xml = WFS.writeTransaction(
+        null, features, null,
+        {
+          featureNS: 'http://localhost:8084/geoserver/test',
+          featureType: 'province',
+          srsName: 'EPSG:3857'
+        }
+      )
+      // 将XML格式请求信息序列化为字符串格式
+      transact_str = (new XMLSerializer()).serializeToString(transact_xml);
+      // 使用AJAX将请求发送到后端
+      let xhr = new XMLHttpRequest();
+      xhr.addEventListener('readystatechange', (event) => {
+        if (xhr.readyState === 4) {
+          if ((xhr.status === 200) || xhr.status === 304) {
+            let transactRes = WFS.readTransactionResponse(xhr.responseText);
+            let str = transactRes.transactionSummary.totalInserted +
+              " totalInserted!, insertIds: " + transactRes.insertIds + "\n";
+            str += transactRes.transactionSummary.totalUpdated + " totalUpdated!\n";
+            str += transactRes.transactionSummary.totalDeleted + " totalDeleted!";
+            alert(str);
+          } else {
+            alert("修改失败!");
+          }
+        }
+      })
+      xhr.open('POST', 'http://localhost:8080/geoserver/wfs');
+      xhr.setRequestHeader('Content-Type', 'text/xml');
+      xhr.send(transact_str);
+    }
+  </script>
+</body>
+
+</html>
