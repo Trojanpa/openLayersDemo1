@@ -3,7 +3,7 @@ OpenLayers框架
 
 ## 学习地址
   + 学习目录：https://www.zhihu.com/column/c_1098918318844612608
-  + 当前学习位置：https://zhuanlan.zhihu.com/p/73973319
+  + 当前学习位置：https://zhuanlan.zhihu.com/p/75478664
   + OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
 
 ## OpenLayers简介
@@ -235,4 +235,51 @@ https://pic1.zhimg.com/80/v2-14f5f294254ee34249ff214aaa7d0a20_720w.jpg
 https://pic4.zhimg.com/80/v2-d64a549503ce40f42a5927b0b314f923_720w.jpg
 
 需要注意的是地图数据是非常昂贵的，如果使用某一个在线地图服务，请先核实对方的版权和数据使用申明，不要侵犯对方的权益，按照要求合法使用地图。几乎所有的在线地图服务都提供了响应的服务接口，强烈建议在商用项目中使用这些接口。对于这些接口的使用，服务商都有详细的说明，在此不赘述。
+
+## 多源数据加载之WMS（动态绘制地图服务）
+一、WMS规范简介
+OGC（开发地理空间联盟）的WMS（Web Map Service）服务规范就是一种动态绘制地图服务的规范，许多WebGIS服务器实现了WMS规范，因此可以结合一些WebGIS服务器发布WMS服务，然后使用OpenLayers调用WMS服务在客户端呈现地图。目前比较流行的WebGIS服务器有GeoServer、ArcGIS Server等。
+
+到目前为止，已发布了4个版本的WMS规范。这些版本是v1.0.0、v1.1.0、v1.1.1和v1.3.0（最新版本）。WMS规范的地址为：Web Map Service | OGC 。
+
+WMS服务主要支持以下操作：
+
+请求服务的元数据（GetCapabilities）
+请求地图图像（GetMap）
+请求关于地图要素的信息（GetFeatureInfo，可选）
+请求图例（GetLegendGraphic，可选）
+请求用户定义的样式（GetStyles，可选）
+作为基本WMS服务，必须至少支持GetCapabilities和GetMap操作，如果作为可查询WMS，则需要支持可选的GetFeatureInfo操作。
+
+对于样式化图层描述符WMS服务，还有两种可选的操作，一个是请求图例符号操作，即GetLegendGraphic；第二个是请求用户定义的样式操作，即GetStyles。
+
+二、请求WMS服务的元数据（GetCapabilities）
+GetCapabilities操作返回服务的元数据。根据该服务的元数据来确定该服务支持哪些其他操作。
+
+接下来，比如我想访问自己本地计算机安装的GeoServer的WMS服务的元数据，就可以直接在浏览器地址栏输入：
+
+http://localhost:8084/geoserver/wms?service=wms&version=1.3.0&request=GetCapabilities
+
+其中：
+
+  + http://localhost:8084/geoserver/wms —— 是请求的路径
+  + service=wms —— 表示使用WMS服务
+  + version=1.3.0 —— 表示使用的WMS规范版本是1.3.0（最新版本）
+  + request=GetCapabilities —— 表示请求服务的元数据
+上面的地址返回或打开一个XML格式的文件。
+
+XML格式的文件中：
+1、<Service>与</Service>之间一段的内容描述的是该服务的名称、关键词以及联系信息等。
+2、<Capability>与</Capabilities>之间描述了该服务支持的操作以及包含的图层。其中：
+
+<Request>与<Request>之间描述的是该服务支持的操作，从上述响应可以看出该服务支持GetCapabilities、GetMap（得到地图）、GetFeatureInfo（得到要素信息）操作。
+<Layer>与<Layer>之间罗列了该服务所包含的所有图层数据
+<GetMap>与</GetMap>中的Format列出了GetMap请求所支持的返回图片的格式，包括PNG、TIFF、GIF、JPEG、WBMP等格式。
+<DCPType></DCPType>中规定了请求的方式，上面的例子表示支持HTTP的Get与Post两种方式。根据该响应我们可构造GetMap请求获取图层或某些图层指定范围的地图。
+
+
+
+
+
+
 

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>加载ArcGIS Online发布的WMTS服务数据</title>
+  <link rel="stylesheet" href="../openLayers/css/ol.css" />
+  <script src="../openLayers/build/ol.js"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map {
+      height: calc(100vh - 63px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+    // 首先设置好WMTS瓦片地图的瓦片坐标系
+    const projection = ol.proj.get('EPSG:3857');          // 获取web墨卡托投影坐标系
+    const projectionExtent = projection.getExtent();      // web墨卡托投影坐标系的四至
+    const width = ol.extent.getWidth(projectionExtent);   // web墨卡托投影坐标系的水平宽度，单位米
+    const resolutions = [];                               // 瓦片分辨率
+    const matrixIds = [];                                 // 可以在元数据中找到
+    for (let z = 0; z < 14; z++) {
+      resolutions[z] = width / (256 * Math.pow(2, z));
+      matrixIds[z] = z;
+    }
+    const wmtsTileGrid = new ol.tilegrid.WMTS({
+      origin: ol.extent.getTopLeft(projectionExtent), // 原点（左上角）
+      resolutions: resolutions,                       // 分辨率数组
+      matrixIds: matrixIds                            // 矩阵ID，就是瓦片坐标系z维度各个层级的标识
+    });
+
+    // WMTS数据源与地图
+    const wmtsSource = new ol.source.WMTS({
+      url: "Folder:/" + "Demographics/USA_Population_Density/MapServer/WMTS/",
+      matrixSet: 'EPSG:3857',             // 投影坐标系参数矩阵集
+      format: 'image/png',                // 图片格式
+      projection: projection,             // 投影坐标系
+      // 投影坐标系
+      tileGrid: wmtsTileGrid
+    });
+    const wmtsLayer = new ol.layer.Tile({
+      source: wmtsSource
+    });
+
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.Stamen({
+            layer: 'terrain'
+          })
+        }),
+        wmtsLayer
+      ],
+      view: new ol.View({
+        center: [0, 0],
+        zoom: 3
+      })
+    });
+  </script>
+</body>
+
+</html>
