@@ -3,7 +3,7 @@ OpenLayers框架
 
 ## 学习地址
   + 学习目录：https://www.zhihu.com/column/c_1098918318844612608
-  + 当前学习位置：https://zhuanlan.zhihu.com/p/73637102
+  + 当前学习位置：https://zhuanlan.zhihu.com/p/73973319
   + OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
 
 ## OpenLayers简介

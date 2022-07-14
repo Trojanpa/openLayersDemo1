@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>通过url加载矢量数据</title>
+  <link rel="stylesheet" href="../openLayers/css/ol.css" />
+  <script src="../openLayers/build/ol.js"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map {
+      height: calc(100vh - 63px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+    // 需要通过live server运行，否则矢量数据源会出现跨域错误
+
+    // 创建地图
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        // 使用OpenStreetMap瓦片地图作为底图（瓦片图层）
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        // 再加载一个geojson的矢量地图（矢量图层）
+        new ol.layer.Vector({
+          // 设置矢量地图的数据
+          source: new ol.source.Vector({
+            url: './data/line-samples.geojson', // 矢量数据（https://blog.csdn.net/Richard__Ting/article/details/99319860）
+            format: new ol.format.GeoJSON(), // 解析矢量数据的解析器（https://pic4.zhimg.com/80/v2-f679d89c750fa747623974580d8d646b_720w.jpg）
+          }),
+          /**
+           * 自带样式的矢量地图修改样式
+           * 有些矢量地图数据自带样式，比如KML格式的矢量地图，如果要修改样式，则相对比较麻烦。得分情况考虑：
+           * 一种是所有矢量地图都不使用自带的样式：
+           * 一种是部分矢量地图不使用自带的样式。
+           * 对于第一种情况，则相对比较简单一点，只需要把ol.format.KML的构造参数extractStyles设置为false即可，然后为layer设定自定义的样式。
+           * 对于第二种情况，则相对麻烦一些，必须要读取加载的所有feature，并进行过滤，对符合条件的feature重新设置样式。
+           */
+          // 自定义矢量地图样式
+          style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+              color: 'red',
+              width: 1
+            })
+          })
+        })
+      ],
+      view: new ol.View({
+        center: [0, 0],
+        zoom: 0
+      })
+    });
+  </script>
+</body>
+
+</html>

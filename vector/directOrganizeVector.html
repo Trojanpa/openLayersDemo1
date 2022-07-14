@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>直接组织矢量数据</title>
+  <link rel="stylesheet" href="../openLayers/css/ol.css" />
+  <script src="../openLayers/build/ol.js"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map {
+      height: calc(100vh - 63px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+    /**
+     * 在OpenLayers中，使用ol.Feature类表示地理要素，一个Feature对象就表示一个地理要素。
+     * 地理要素分为Point（点）、MultiPoint（多点）、LineString（线）、MultiLineString（多线）、
+     * Polygon（面）、MultiPolygon（多面）、GeometryCollection（几何集合）。
+     * 这些地理要素被规划到geometry特征的type属性下，并且不同的type会有不同的coordinates值。
+     * 
+     * 其中，Feature对象可以包含空间信息与属性信息，在下面的示例中，Feature对象的空间信息
+     * 分别通过ol.geom.Point类、ol.geom.LineString类、ol.geom.Polygon类来组织，然后再
+     * 赋值给geometry参数。另外，name参数作为一个属性信息也被包含在Feature对象中。
+     * 构建了三个地理要素后，再把它们分别通过ol.source.Vector类的addFeature()方法加入
+     * 到ol.source.Vector对象中，最后再通过ol.layer.Vector类构成矢量图层并一起加入到地图中。
+     */
+
+    // 初始化一个点要素
+    const pointFeature = new ol.Feature({
+      // 空间信息
+      geometry: new ol.geom.Point([12958998, 4852221]),
+      // 属性信息
+      name: '点要素',
+    });
+
+    // 初始化一个线要素
+    const lineFeature = new ol.Feature({
+      // 空间信息
+      geometry: new ol.geom.LineString([[11590147, 4322577], [13594369, 3872784]]),
+      // 属性信息
+      name: '线要素',
+    });
+
+    // 初始化一个多边形要素
+    const polygonFeature = new ol.Feature({
+      // 空间信息
+      geometry: new ol.geom.Polygon([[[11801814, 3251012], [14057391, 2748303], [12714628, 1346008], [11801814, 3251012]]]),
+      // 属性信息
+      name: '多边形要素',
+    });
+
+    // 初始化一个矢量数据源, 并添加上面创建的要素
+    const vectorSource = new ol.source.Vector();
+    vectorSource.addFeature(pointFeature);
+    vectorSource.addFeature(lineFeature);
+    vectorSource.addFeature(polygonFeature);
+
+    // 初始化一个矢量图层
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource
+    });
+
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        // 使用OpenStreetMap作为底图（瓦片图层）
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        }),
+        // 矢量图层
+        vectorLayer,
+      ],
+      view: new ol.View({
+        center: [0, 0],
+        zoom: 0
+      })
+    });
+  </script>
+</body>
+
+</html>
