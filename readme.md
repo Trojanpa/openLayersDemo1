@@ -1,39 +1,105 @@
-# OpenLayers
+# OpenLayer
+
 OpenLayers框架
 
 ## 学习地址
-  + 学习目录：https://www.zhihu.com/column/c_1098918318844612608
-  + 当前学习位置：https://zhuanlan.zhihu.com/p/93134702
-  + OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
+
++ 学习目录：https://www.zhihu.com/column/c_1098918318844612608
++ 当前学习位置：https://zhuanlan.zhihu.com/p/93134702
++ OpenLayers的官方网站：https://openlayers.org/en/latest/doc/faq.html
 
 ## OpenLayers简介
-  + OpenLayers是一个用于开发WebGIS客户端的JavaScript包，最初基于BSD许可发行。
-  + OpenLayers是一个开源的项目，其设计之意是为互联网客户端提供强大的地图展示功能，包括地图数据显示与相关操作，并具有灵活的扩展机制。
-  + 目前OpenLayers已经成为一个拥有众多开发者和帮助社区的成熟、流行的框架。
 
++ OpenLayers是一个用于开发WebGIS客户端的JavaScript包，最初基于BSD许可发行。
++ OpenLayers是一个开源的项目，其设计之意是为互联网客户端提供强大的地图展示功能，包括地图数据显示与相关操作，并具有灵活的扩展机制。
++ 目前OpenLayers已经成为一个拥有众多开发者和帮助社区的成熟、流行的框架。
+
+## Web墨卡托投影坐标系
+
+Web墨卡托投影坐标系：
+
+以整个世界范围，赤道作为标准纬线，本初子午线作为中央经线，两者交点为坐标原点，向东向北为正，向西向南为负。
+
+X轴：由于赤道半径为6378137米，则赤道周长为2*PI*r = 2*20037508.3427892，因此X轴的取值范围：[-20037508.3427892,20037508.3427892]。
+
+Y轴：由墨卡托投影的公式可知，同时上图也有示意，当纬度φ接近两极，即90°时，y值趋向于无穷。
+
+这是那些“懒惰的工程师”就把Y轴的取值范围也限定在[-20037508.3427892,20037508.3427892]之间，搞个正方形。
+
+众所周知，事先切好静态图片，提高访问效率云云。俺只是告诉你为什么会是这样子。因此在投影坐标系（米）下的范围是：最小(-20037508.3427892, -20037508.3427892 )到最大 (20037508.3427892, 20037508.3427892)。
+
+//经纬度转Wev墨卡托
+dvec3 CMathEngine::lonLat2WebMercator(dvec3  lonLat)
+{
+    dvec3  mercator;
+    double x = lonLat.x *20037508.34/180;
+    double y = log(tan((90+lonLat.y)*PI/360))/(PI/180);
+    y = y *20037508.34/180;
+    mercator.x = x;
+    mercator.y = y;
+    return mercator ;
+}
+//Web墨卡托转经纬度
+dvec3 CMathEngine::WebMercator2lonLat( dvec3   mercator )
+{
+    dvec3 lonLat;
+    double x = mercator.x/20037508.34*180;
+    double y = mercator.y/20037508.34*180;
+    y= 180/PI*(2*atan(exp(y*PI/180))-PI/2);
+    lonLat.x = x;
+    lonLat.y = y;
+    return lonLat;
+}
+
+经纬度
+地球是一个椭球，Datum是一组用于描述这个椭球的数据集合。最常用的一个Datum是WGS84（World Geodetic System 1984），它的主要参数有：
+
+坐标系的原点是地球质心（center of mass）；
+子午线（meridian），即零度经线，位于格林威治子午线Royal Observatory所在纬度往东102.5米所对应的的经线圈；
+椭球截面长轴为a=6378137米；
+椭圆截面短轴为b=6356752.3142米，可选参数；
+扁平比例（flattening）f=(a−b)/a=1/298.257223563；
+geoid，海平面，用于定义高度，本文从略。
+通过以上参数设定，我们才能对地球上的任意一个位置用经度、纬度、高度三个变量进行描述。所以当我们获取一组经纬度信息时，首先要弄明白这组信息对应的Datum。
+
+参考：https://segmentfault.com/a/1190000011276788
+
+投影
+地图是显示在平面上的，因此需要将球面坐标转换为平面坐标，这个转换过程称为投影。最常见的投影是墨卡托（Mercator）投影，它具有等角性质，即球体上的两点之间的角度方位与平面上的两点之间的角度方位保持不变，因此特别适合用于导航。
+
+Web墨卡托投影（又称球体墨卡托投影）是墨卡托投影的变种，它接收的输入是Datum为WGS84的经纬度，但在投影时不再把地球当做椭球而当做半径为6378137米的标准球体，以简化计算。
+
+Web墨卡托投影有两个相关的投影标准，经常搞混：
+
+EPSG4326：Web墨卡托投影后的平面地图，但仍然使用WGS84的经度、纬度表示坐标；
+EPSG3857：Web墨卡托投影后的平面地图，坐标单位为米。
 
 ## OpenLayers的DOM元素组织结构
+
 首先OpenLayers会在我们自定义的div元素（即id为map的div元素）中创建一个Viewport容器，地图中的所有内容都放置在Viewport中呈现。
 
 在Viewport容器中分别创建了如下三个关键的元素层，分别渲染呈现地图容器中的内容：
 
-  + 地图渲染层 —— 这是一个canvas元素，地图基于canvas 2D方式渲染
-  + 内容叠加层 —— 用于放置叠置层（ol.Overlay，后面会详细介绍）内容，如在地图上添加弹窗、图片等等
-  + 地图控件层 —— 用于放置控件，默认情况下会放置ol.control.Zoom（用于控制地图放大、缩小）、ol.control.Rotate（用于控制地图旋转）、ol.control.Attribution（用于控制地图右下角标记）这三个控件。
++ 地图渲染层 —— 这是一个canvas元素，地图基于canvas 2D方式渲染
++ 内容叠加层 —— 用于放置叠置层（ol.Overlay，后面会详细介绍）内容，如在地图上添加弹窗、图片等等
++ 地图控件层 —— 用于放置控件，默认情况下会放置ol.control.Zoom（用于控制地图放大、缩小）、ol.control.Rotate（用于控制地图旋转）、ol.control.Attribution（用于控制地图右下角标记）这三个控件。
 
 ## 地图控件简介
+
 OpenLayers封装了很多控件用于对地图进行操作、显示地图信息等。
-  + 归属控件（Attribution） —— 用于展示地图资源的版权或者归属，它会默认加入到地图中。
-  + 全屏控件（FullScreen） —— 控制地图全屏展示
-  + 坐标拾取控件（MousePosition） —— 用于在地图上拾取坐标
-  + 鹰眼控件（OverviewMap） —— 生成地图的一个概览图
-  + 旋转控件（Rotate） —— 用于鼠标拖拽旋转地图，它会默认加入到地图中。
-  + 比例尺控件（ScaleLine） —— 用于生成地图比例尺
-  + 滑块缩放控件（ZoomSlider） —— 以滑块的形式缩放地图
-  + 缩放至特定位置控件（ZoomToExtent） —— 用于将地图视图缩放至特定位置
-  + 普通缩放控件（Zoom） —— 普通缩放控件，它会默认加入到地图中。
+
++ 归属控件（Attribution） —— 用于展示地图资源的版权或者归属，它会默认加入到地图中。
++ 全屏控件（FullScreen） —— 控制地图全屏展示
++ 坐标拾取控件（MousePosition） —— 用于在地图上拾取坐标
++ 鹰眼控件（OverviewMap） —— 生成地图的一个概览图
++ 旋转控件（Rotate） —— 用于鼠标拖拽旋转地图，它会默认加入到地图中。
++ 比例尺控件（ScaleLine） —— 用于生成地图比例尺
++ 滑块缩放控件（ZoomSlider） —— 以滑块的形式缩放地图
++ 缩放至特定位置控件（ZoomToExtent） —— 用于将地图视图缩放至特定位置
++ 普通缩放控件（Zoom） —— 普通缩放控件，它会默认加入到地图中。
 
 ## 多源数据加载之数据
+
 OpenLayers的地图数据通过图层（Layer）进行组织渲染，然后通过数据源（Source）设置具体的地图数据来源。
 
 Layer可看作渲染地图的层容器，具体的数据需要通过Source设置。
@@ -45,9 +111,10 @@ Source和Layer是一对一的关系，有一个Source，必然需要一个Layer�
 多源数据加载之数据组织图：https://pic1.zhimg.com/v2-6a7a73daeecd3e7ddd124db01cc9bac7_1440w.jpg?source=172ae18b
 
 在数据源中：
-  + Tile类为瓦片抽象基类，其子类作为各类瓦片数据的数据源。
-  + Vector类为矢量数据源基类，为矢量图层提供具体的数据来源，包括直接组织或读取的矢量数据（Features）、远程数据源的矢量数据（即通过url设置数据源路径）等。若是url设置的矢量数据源，则通过解析器Format（即ol.format.Feature的子类）来解析各类矢量数据，如XML、Text、JSON、GML、KML、GPS、WFS、WKT、GeoJSON等地图数据。
-  + Image类为单一图像基类，其子类为画布（canvas）元素、服务器图片、单个静态图片、WMS单一图像等的数据源。它与Tile类的区别在于，Image类对应的是一整张大图片，而不像瓦片那样很多张小图片，从而无需切片，也可以加载一些地图，适用于一些小场景地图。
+
++ Tile类为瓦片抽象基类，其子类作为各类瓦片数据的数据源。
++ Vector类为矢量数据源基类，为矢量图层提供具体的数据来源，包括直接组织或读取的矢量数据（Features）、远程数据源的矢量数据（即通过url设置数据源路径）等。若是url设置的矢量数据源，则通过解析器Format（即ol.format.Feature的子类）来解析各类矢量数据，如XML、Text、JSON、GML、KML、GPS、WFS、WKT、GeoJSON等地图数据。
++ Image类为单一图像基类，其子类为画布（canvas）元素、服务器图片、单个静态图片、WMS单一图像等的数据源。它与Tile类的区别在于，Image类对应的是一整张大图片，而不像瓦片那样很多张小图片，从而无需切片，也可以加载一些地图，适用于一些小场景地图。
 
 从复杂度来分析，Image类和Vector类都不复杂，其数据格式和来源方式都简单。而Tile类则不一样，由于一些历史问题，多个服务提供商，多种标准等诸多原因，导致要支持世界上大多数的瓦片数据，就需要针对这些差异（这些差异主要是瓦片坐标系不同、分辨率不同等，后面会详细介绍）提供不同的Tile数据源支持。我们先来看一下OpenLayers现在支持的Source具体有哪些：
 https://pic2.zhimg.com/80/v2-f801f289555ac752a52632b63e3c6c85_720w.jpg
@@ -56,9 +123,9 @@ https://pic2.zhimg.com/80/v2-f801f289555ac752a52632b63e3c6c85_720w.jpg
 
 我们先了解最为复杂的ol.source.Tile，其叶子节点类有很多，大致可以分为几类：
 
-  + 在线服务的Source，包括ol.source.BingMaps（微软提供的Bing在线地图数据）、ol.source.Stamen（Stamen提供的在线地图数据）。没有自己的地图服务器的情况下，可直接使用它们，加载地图底图。
-  + 支持协议标准的Source，包括ol.source.TileArcGISRest、ol.source.TileWMS、ol.source.WMTS、ol.source.UTFGrid、ol.source.TileJSON。如果要使用它们，首先你得先学习对应的协议，之后必须找到支持这些协议的服务器来提供数据源，这些服务器可以是底图服务提供商提供的，也可以是自己搭建的服务器，关键是得支持这些协议。
-  + ol.source.XYZ，这个需要单独提一下，因为是可以直接使用的，而且现在很多地图服务（在线的，或者自己搭建的服务器）都支持xyz方式的请求。国内在线的地图服务，高德、天地图等，都可以通过这种方式加载，本地离线瓦片地图也可以，用途广泛，且简单易学。
++ 在线服务的Source，包括ol.source.BingMaps（微软提供的Bing在线地图数据）、ol.source.Stamen（Stamen提供的在线地图数据）。没有自己的地图服务器的情况下，可直接使用它们，加载地图底图。
++ 支持协议标准的Source，包括ol.source.TileArcGISRest、ol.source.TileWMS、ol.source.WMTS、ol.source.UTFGrid、ol.source.TileJSON。如果要使用它们，首先你得先学习对应的协议，之后必须找到支持这些协议的服务器来提供数据源，这些服务器可以是底图服务提供商提供的，也可以是自己搭建的服务器，关键是得支持这些协议。
++ ol.source.XYZ，这个需要单独提一下，因为是可以直接使用的，而且现在很多地图服务（在线的，或者自己搭建的服务器）都支持xyz方式的请求。国内在线的地图服务，高德、天地图等，都可以通过这种方式加载，本地离线瓦片地图也可以，用途广泛，且简单易学。
 
 ol.source.Image虽然有几种不同的子类，但大多比较简单，因为不牵涉到过多的协议和服务提供商。而ol.source.Vector就更加简单了，但有时候其唯一的子类ol.source.Cluster（聚合要素时使用）在处理大量的要素时，我们可能需要使用。
 
@@ -72,6 +139,7 @@ https://pic2.zhimg.com/80/v2-4bf60e33d5d7c28cbc8e6631fe385d01_720w.jpg
 是不是觉得类有点多，一时难以招架？随着我们以后对这些类的详细介绍与使用，我们一定能够熟练掌握它们。
 
 ## 多源数据加载之瓦片地图原理一
+
 一、瓦片地图简介
 瓦片地图（也叫切片地图）源于一种大地图解决方案，就是在多个比例尺下配置地图，然后提前把每个比例尺下的地图绘制为小块图片（瓦片），保存在服务器上用于缓存的目录中。这样客户端在访问地图时，可以直接获取需要的小块图片拼接成整幅地图，而不是由服务器动态创建（实时创建）出一幅图片再发送到客户端，从而极大提高了访问速度。
 
@@ -97,6 +165,7 @@ https://pic3.zhimg.com/80/v2-4998b045c5693d038393317c46a58e2a_720w.jpg
 对照一下，是否更加的明白了LOD原理及其在GIS中的应用了？
 
 ## 多源数据加载之瓦片地图原理二
+
 一、瓦片计算
 1.1、切片方式
 如果对整个地球图片进行切片，需要考虑的是整个地球图片大小，以及切片规则，切片（瓦片）大小。
@@ -112,11 +181,12 @@ https://pic4.zhimg.com/80/v2-e9b8b705ed3a49dce360f20c9af2177b_720w.jpg
 
 1.2、瓦片数量计算
 通过上面切片的介绍，我们可以对每一层级拥有的瓦片的数量进行简单的计算：
-  + 层级0的瓦片数是 1 = 2^​0 ​​∗ 2^​0
-  + 层级1的瓦片数是 4 = 2^1 * 2^1
-  + 层级2的瓦片数是 16 = 2^2 * 2^2
-  + 层级3的瓦片数是 64 = 2^3 * 2^3
-  + 层级z的瓦片数是 2^z * 2^z
+
++ 层级0的瓦片数是 1 = 2^​0 ​​∗ 2^​0
++ 层级1的瓦片数是 4 = 2^1 * 2^1
++ 层级2的瓦片数是 16 = 2^2 * 2^2
++ 层级3的瓦片数是 64 = 2^3 * 2^3
++ 层级z的瓦片数是 2^z * 2^z
 
 1.3、瓦片坐标系
 从以上的金字塔瓦片结构可以看出来，瓦片的组织方式是三维的，因此对一幅地图进行切片时，需要给每一块瓦片进行详细的编号，即需要指定每一块瓦片的行号、列号以及层级数。
@@ -176,41 +246,44 @@ https://pic3.zhimg.com/80/v2-eb2226f935c5675c8e8aa67217de0b16_720w.jpg
 因为不同的在线瓦片地图可能采用不一样的分辨率，比如百度在线瓦片地图。所以在使用在线瓦片地图或者自己制作的瓦片地图时，都需要知道使用的分辨率是多少。如若不然，可能会出现位置偏移。
 
 ## 使用XYZ方式加载高德地图
+
 目前高德的瓦片地址有如下两种：
 
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7和
-  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7和
++ http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z}
 前者是高德的新版地址，后者是老版地址。
 
 高德新版的参数：
 
-  + lang可以通过zh_cn设置中文，en设置英文；
-  + size基本无作用；
-  + scl设置标注还是底图，scl=1代表注记，scl=2代表底图（矢量或者影像）；
-  + style设置影像和路网，style=6为影像图，style=7为矢量路网，style=8为影像路网。
++ lang可以通过zh_cn设置中文，en设置英文；
++ size基本无作用；
++ scl设置标注还是底图，scl=1代表注记，scl=2代表底图（矢量或者影像）；
++ style设置影像和路网，style=6为影像图，style=7为矢量路网，style=8为影像路网。
 
 总结之：
 
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7 为矢量图（含路网、含注记）
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=7 为矢量图（含路网，不含注记）
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=6 为影像底图（不含路网，不含注记）
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6 为影像底图（不含路网、不含注记）
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8 为影像路图（含路网，含注记）
-  + http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=8 为影像路网（含路网，不含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7 为矢量图（含路网、含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=7 为矢量图（含路网，不含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=6 为影像底图（不含路网，不含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6 为影像底图（不含路网、不含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8 为影像路图（含路网，含注记）
++ http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=8 为影像路网（含路网，不含注记）
 高德旧版可以通过style参数设置影像、矢量、路网。
 
 总结之：
 
-  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z} 为影像底图（不含路网，不含注记）
-  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z} 为矢量地图（含路网，含注记）
-  + http://webst0{1-4}.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z} 为影像路网（含路网，含注记）
++ http://webst0{1-4}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z} 为影像底图（不含路网，不含注记）
++ http://webst0{1-4}.is.autonavi.com/appmaptile?style=7&x={x}&y={y}&z={z} 为矢量地图（含路网，含注记）
++ http://webst0{1-4}.is.autonavi.com/appmaptile?style=8&x={x}&y={y}&z={z} 为影像路网（含路网，含注记）
 
 ## 使用XYZ方式加载雅虎地图（Yahoo）
+
 Yahoo地图的代码有点不一样：多了tileSize参数的设置。
 
 默认情况下，tileSize为256，这也是现在绝大多数瓦片采用的大小。但Yahoo地图使用的是512，所以我们需要指定。
 
 ## 通过自定义OpenLayers的瓦片坐标系来加载百度地图
+
 前面一篇文章讲到可以使用XYZ的方式非常简单的加载瓦片地图，但遗憾地是，这种简单方法并不适用于所有的在线瓦片地图，总有一些是特殊的，比如百度地图。
 
 瓦片地图加载的关键在于找对瓦片，但要找对瓦片，就得知道瓦片的坐标，而瓦片坐标又基于明确的瓦片坐标系。
@@ -222,6 +295,7 @@ Yahoo地图的代码有点不一样：多了tileSize参数的设置。
 那么，具体该怎么实现转换？最详细明了的方式还是看实例（查看baidu_map.html页面配置）。
 
 ## 分析瓦片地图的瓦片坐标系
+
 如何分析不同在线瓦片地图的瓦片坐标系呢？非常重要的一点是，先从特例触发，找简单的情况分析，比如选择z为2或者3进行分析，这种情况下，瓦片的数量比较少，可以查看整个地球范围内的地图的瓦片请求，注意分析其请求的url参数。
 
 瓦片的url解析对于想直接使用在线瓦片服务的开发者而言，是一项经常要做的事。根据难度，大致可以分为三种情况：
@@ -237,6 +311,7 @@ https://pic4.zhimg.com/80/v2-d64a549503ce40f42a5927b0b314f923_720w.jpg
 需要注意的是地图数据是非常昂贵的，如果使用某一个在线地图服务，请先核实对方的版权和数据使用申明，不要侵犯对方的权益，按照要求合法使用地图。几乎所有的在线地图服务都提供了响应的服务接口，强烈建议在商用项目中使用这些接口。对于这些接口的使用，服务商都有详细的说明，在此不赘述。
 
 ## 多源数据加载之WMS（动态绘制地图服务）
+
 一、WMS规范简介
 OGC（开发地理空间联盟）的WMS（Web Map Service）服务规范就是一种动态绘制地图服务的规范，许多WebGIS服务器实现了WMS规范，因此可以结合一些WebGIS服务器发布WMS服务，然后使用OpenLayers调用WMS服务在客户端呈现地图。目前比较流行的WebGIS服务器有GeoServer、ArcGIS Server等。
 
@@ -262,10 +337,10 @@ http://localhost:8084/geoserver/wms?service=wms&version=1.3.0&request=GetCapabil
 
 其中：
 
-  + http://localhost:8084/geoserver/wms —— 是请求的路径
-  + service=wms —— 表示使用WMS服务
-  + version=1.3.0 —— 表示使用的WMS规范版本是1.3.0（最新版本）
-  + request=GetCapabilities —— 表示请求服务的元数据
++ http://localhost:8084/geoserver/wms —— 是请求的路径
++ service=wms —— 表示使用WMS服务
++ version=1.3.0 —— 表示使用的WMS规范版本是1.3.0（最新版本）
++ request=GetCapabilities —— 表示请求服务的元数据
 上面的地址返回或打开一个XML格式的文件。
 
 XML格式的文件中：
@@ -276,10 +351,4 @@ XML格式的文件中：
 <Layer>与<Layer>之间罗列了该服务所包含的所有图层数据
 <GetMap>与</GetMap>中的Format列出了GetMap请求所支持的返回图片的格式，包括PNG、TIFF、GIF、JPEG、WBMP等格式。
 <DCPType></DCPType>中规定了请求的方式，上面的例子表示支持HTTP的Get与Post两种方式。根据该响应我们可构造GetMap请求获取图层或某些图层指定范围的地图。
-
-
-
-
-
-
 
