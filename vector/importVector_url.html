@@ -38,7 +38,8 @@
         new ol.layer.Vector({
           // 设置矢量地图的数据
           source: new ol.source.Vector({
-            url: './data/line-samples.geojson', // 矢量数据（https://blog.csdn.net/Richard__Ting/article/details/99319860）
+            // url: './data/line-samples.geojson', // 矢量数据（https://blog.csdn.net/Richard__Ting/article/details/99319860）
+            url: './data/test.geojson', // 矢量数据（https://blog.csdn.net/Richard__Ting/article/details/99319860）
             format: new ol.format.GeoJSON(), // 解析矢量数据的解析器（https://pic4.zhimg.com/80/v2-f679d89c750fa747623974580d8d646b_720w.jpg）
           }),
           /**
@@ -61,7 +62,30 @@
       view: new ol.View({
         center: [0, 0],
         zoom: 0
-      })
+      }),
+      controls: ol.control.defaults().extend([
+        new ol.control.ZoomSlider(), // 实例化滑块缩放控件
+        new ol.control.ZoomToExtent({ // 实例化缩放至特定位置控件
+          // 指定缩放的目标位置，它是一个数组
+          extent: [
+            12667718, 2562800, // 前两个表示位置矩形的左下角坐标
+            12718359, 2597725, // 后两个表示位置矩形的右上角坐标
+          ]
+        }),
+        new ol.control.FullScreen(), // 实例化全屏控件
+        new ol.control.MousePosition(), // 实例化坐标拾取控件
+        new ol.control.OverviewMap({ // 实例化鹰眼控件（即整个地图的概览图，也称鹰眼图、缩略图）
+          collapsed: false, // 是否默认展开
+          layers: [ // 需要设置鹰眼图的目标图层，否则鹰眼图一片空白
+            new ol.layer.Tile({
+              source: new ol.source.OSM()
+            }),
+          ],
+        }),
+        new ol.control.ScaleLine({
+          units: 'metric', // 设置比例尺单位，接受"degrees"、"imperial"、"us"、"nautical"或"metric"（默认为”metric")。
+        }), // 实例化比例尺控件
+      ]),
     });
   </script>
 </body>
